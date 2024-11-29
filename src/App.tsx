@@ -1,111 +1,49 @@
-import {
-  Box,
-  CssBaseline,
-  Divider,
-  Drawer,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ThemeProvider,
-  Toolbar,
-  Typography,
-} from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import { useState } from 'react';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ListItemText from '@mui/material/ListItemText';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import MailIcon from '@mui/icons-material/Mail';
-
+import Layout from './layout/Layout';
+import CombinedProvider from './layout/CombinedProvider';
+import { routes } from './routes';
 import { theme } from './theme';
-import AppBar from './layout/AppBar';
-import DrawerHeader from './layout/DrawerHeader';
-import { DRAWER_WIDTH } from './layout/consts';
-import Main from './layout/Main';
+import { AuthService } from './api/greetv1/auth_connect';
+import { createConnectTransport, createGrpcWebTransport } from '@connectrpc/connect-web';
+import { ConnectError, createPromiseClient } from '@connectrpc/connect';
 
-function App() {
-  const [appbarOpen, setAppbarOpen] = useState(false);
-  const handleDrawerOpen = () => {
-    setAppbarOpen(true);
-  };
+const transport = createConnectTransport({
+  baseUrl: 'https://connect-backend-enbwmscxnq-as.a.run.app',
+});
 
-  const handleDrawerClose = () => {
-    setAppbarOpen(false);
-  };
-  return (
-    <ThemeProvider theme={theme}>
-      <Box sx={{ display: 'flex' }}>
-        <CssBaseline />
-        <AppBar position="fixed" open={appbarOpen}>
-          <Toolbar>
-            <IconButton
-              color="inherit"
-              onClick={handleDrawerOpen}
-              edge="start"
-              sx={{ mr: 2, ...(appbarOpen && { display: 'none' }) }}
-            >
-              <MenuIcon />
-            </IconButton>
-            <Typography variant="h6" noWrap component="div">
-              Content
-            </Typography>
-          </Toolbar>
-        </AppBar>
-        <Drawer
-          sx={{
-            width: DRAWER_WIDTH,
-            flexShrink: 0,
-            '& .MuiDrawer-paper': {
-              width: DRAWER_WIDTH,
-              boxSizing: 'border-box',
-            },
-          }}
-          variant="persistent"
-          anchor="left"
-          open={appbarOpen}
-        >
-          <DrawerHeader>
-            <Box
-              sx={{ justifyContent: 'flex-start', display: 'flex', width: '100%', marginLeft: 1 }}
-            >
-              <Typography variant="h6">Dash</Typography>
-            </Box>
-            <IconButton onClick={handleDrawerClose}>
-              {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-            </IconButton>
-          </DrawerHeader>
-          <Divider />
-          <List>
-            {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-              <ListItem key={text} disablePadding>
-                <ListItemButton>
-                  <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-                  <ListItemText primary={text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-          <Divider />
-          <List>
-            {['All mail', 'Trash', 'Spam'].map((text, index) => (
-              <ListItem key={text} disablePadding>
-                <ListItemButton>
-                  <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-                  <ListItemText primary={text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </Drawer>
-        <Main open={appbarOpen}>
-          <span>sfdsfsdf</span>
-        </Main>
-      </Box>
-    </ThemeProvider>
+const client = createPromiseClient(AuthService, transport);
+try {
+  console.log(
+    await client.me(
+      {
+        // password: 'manh',
+        // username: 'manh',
+      },
+      {
+        headers: {
+          Authorization:
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1hbmgiLCJzdWIiOiIxIiwiZXhwIjoxNzEwMDYzODY4fQ.f-ssb7-3khdc8d7-ama-ApBEDJyIX0vJ9ybTM7YTpKQ',
+        },
+      },
+    ),
+  );
+} catch (err) {
+  // console.log(err);
+  const errC = ConnectError.from(err);
+  console.log({
+    ...errC,
+  });
+  console.log(
+    errC.metadata.forEach((val, key) => {
+      console.log(val, key);
+    }),
   );
 }
+const App: React.FC = () => {
+  return (
+    <CombinedProvider theme={theme}>
+      <Layout routes={routes} />
+    </CombinedProvider>
+  );
+};
 
 export default App;
